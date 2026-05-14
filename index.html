@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aplikacja Notatek</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- jQuery UI -->
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+
+  <!-- DataTables -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+
+  <style>
+    body {
+      background: #f5f5f5;
+      transition: 0.3s;
+    }
+
+    .dark-mode {
+      background: #1f1f1f;
+      color: white;
+    }
+
+    .dark-mode .card {
+      background: #2e2e2e;
+      color: white;
+    }
+
+    .dark-mode table {
+      color: white;
+    }
+
+    .note-card {
+      cursor: move;
+      transition: 0.3s;
+    }
+
+    .note-card:hover {
+      transform: scale(1.02);
+    }
+
+    .completed {
+      text-decoration: line-through;
+      opacity: 0.7;
+    }
+
+    .error {
+      color: red;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h1>Aplikacja Notatek</h1>
+      <button id="toggleTheme" class="btn btn-dark">Tryb Jasny/Ciemny</button>
+    </div>
+
+    <!-- Formularz logowania -->
+    <div class="card p-4 mb-4">
+      <h3>Logowanie</h3>
+
+      <form id="loginForm">
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Hasło</label>
+          <input type="password" name="password" class="form-control">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Zaloguj</button>
+      </form>
+    </div>
+
+    <!-- Formularz notatek -->
+    <div class="card p-4 mb-4">
+      <h3>Dodaj Notatkę</h3>
+
+      <form id="noteForm">
+        <div class="mb-3">
+          <label class="form-label">Tytuł</label>
+          <input type="text" id="title" class="form-control">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Treść</label>
+          <textarea id="content" class="form-control"></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Data</label>
+          <input type="text" id="date" class="form-control">
+        </div>
+
+        <button type="submit" class="btn btn-success">Dodaj</button>
+      </form>
+    </div>
+
+    <!-- Przyciski efektów -->
+    <div class="mb-4">
+      <button id="hideNotes" class="btn btn-warning">Ukryj notatki</button>
+      <button id="showNotes" class="btn btn-info">Pokaż notatki</button>
+      <button id="toggleNotes" class="btn btn-secondary">Toggle</button>
+    </div>
+
+    <!-- Notatki -->
+    <div class="row" id="notesContainer"></div>
+
+    <!-- Tabela -->
+    <div class="card p-4 mt-5">
+      <h3>Tabela Notatek</h3>
+
+      <table id="notesTable" class="display">
+        <thead>
+          <tr>
+            <th>Tytuł</th>
+            <th>Treść</th>
+            <th>Data</th>
+          </tr>
+        </thead>
+
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+  <!-- jQuery UI -->
+  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+  <!-- jQuery Validate -->
+  <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
+
+  <!-- DataTables -->
+  <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+
+  <!-- Bootstrap -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    $(document).ready(function () {
+
+      // DataTable
+      const table = $('#notesTable').DataTable();
+
+      // Datepicker
+      $('#date').datepicker({
+        dateFormat: 'dd-mm-yy'
+      });
+
+      // Walidacja logowania
+      $('#loginForm').validate({
+        rules: {
+          email: {
+            required: true,
+            email: true
+          },
+          password: {
+            required: true,
+            minlength: 5
+          }
+        },
+        messages: {
+          email: {
+            required: 'Podaj email',
+            email: 'Niepoprawny email'
+          },
+          password: {
+            required: 'Podaj hasło',
+            minlength: 'Minimum 5 znaków'
+          }
+        },
+        submitHandler: function () {
+          alert('Logowanie poprawne!');
+        }
+      });
+
+      // Dodawanie notatek
+      $('#noteForm').submit(function (e) {
+        e.preventDefault();
+
+        const title = $('#title').val();
+        const content = $('#content').val();
+        const date = $('#date').val();
+
+        if (title === '' || content === '' || date === '') {
+          alert('Uzupełnij wszystkie pola!');
+          return;
+        }
+
+        // Dodanie do DOM
+        const note = `
+          <div class="col-md-4 mb-4 note-item">
+            <div class="card p-3 note-card">
+              <h4 class="note-title">${title}</h4>
+              <p class="note-content">${content}</p>
+              <small>${date}</small>
+
+              <div class="mt-3 d-flex gap-2">
+                <button class="btn btn-danger deleteBtn">Usuń</button>
+                <button class="btn btn-warning editBtn">Edytuj</button>
+                <button class="btn btn-success doneBtn">Wykonane</button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        $('#notesContainer').append(note);
+
+        // FadeIn
+        $('.note-item').last().hide().fadeIn(700);
+
+        // Dodanie do tabeli
+        table.row.add([
+          title,
+          content,
+          date
+        ]).draw();
+
+        // Czyszczenie formularza
+        $('#title').val('');
+        $('#content').val('');
+        $('#date').val('');
+
+        // draggable
+        $('.note-card').draggable();
+      });
+
+      // Usuwanie
+      $(document).on('click', '.deleteBtn', function () {
+        $(this)
+          .closest('.note-item')
+          .fadeOut(500, function () {
+            $(this).remove();
+          });
+      });
+
+      // Edycja
+      $(document).on('click', '.editBtn', function () {
+        const card = $(this).closest('.note-card');
+
+        const newTitle = prompt('Nowy tytuł:', card.find('.note-title').text());
+        const newContent = prompt('Nowa treść:', card.find('.note-content').text());
+
+        if (newTitle !== null) {
+          card.find('.note-title').text(newTitle);
+        }
+
+        if (newContent !== null) {
+          card.find('.note-content').html(newContent);
+        }
+
+        card.animate({
+          opacity: 0.5
+        }, 200).animate({
+          opacity: 1
+        }, 200);
+      });
+
+      // Oznaczanie jako wykonane
+      $(document).on('click', '.doneBtn', function () {
+        $(this)
+          .closest('.note-card')
+          .toggleClass('completed');
+      });
+
+      // Hover efekt
+      $(document).on('mouseenter', '.note-card', function () {
+        $(this).css('border', '2px solid #0d6efd');
+      });
+
+      $(document).on('mouseleave', '.note-card', function () {
+        $(this).css('border', 'none');
+      });
+
+      // Pokazywanie / ukrywanie
+      $('#hideNotes').click(function () {
+        $('#notesContainer').slideUp();
+      });
+
+      $('#showNotes').click(function () {
+        $('#notesContainer').slideDown();
+      });
+
+      $('#toggleNotes').click(function () {
+        $('#notesContainer').toggle(500);
+      });
+
+      // Tryb ciemny
+      $('#toggleTheme').click(function () {
+        $('body').toggleClass('dark-mode');
+      });
+
+      // keyup
+      $('#title').keyup(function () {
+        const length = $(this).val().length;
+        console.log('Liczba znaków:', length);
+      });
+
+    });
+  </script>
+</body>
+</html>
