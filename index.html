@@ -154,7 +154,22 @@
     $(document).ready(function () {
 
       // DataTable
-      const table = $('#notesTable').DataTable();
+      const table = $('#notesTable').DataTable({
+        language: {
+          search: 'Szukaj:',
+          lengthMenu: 'Pokaż _MENU_ wpisów',
+          info: 'Wyświetlanie _START_ do _END_ z _TOTAL_ notatek',
+          paginate: {
+            first: 'Pierwsza',
+            last: 'Ostatnia',
+            next: 'Następna',
+            previous: 'Poprzednia'
+          },
+          zeroRecords: 'Nie znaleziono notatek',
+          infoEmpty: 'Brak danych',
+          infoFiltered: '(filtrowanie z _MAX_ wszystkich notatek)'
+        }
+      });
 
       // Datepicker
       $('#date').datepicker({
@@ -184,7 +199,7 @@
           }
         },
         submitHandler: function () {
-          alert('Logowanie poprawne!');
+          alert('Zalogowano pomyślnie!');
         }
       });
 
@@ -307,7 +322,7 @@
       // keyup
       $('#title').keyup(function () {
         const length = $(this).val().length;
-        console.log('Liczba znaków:', length);
+        console.log('Liczba znaków w tytule:', length);
       });
 
     });
